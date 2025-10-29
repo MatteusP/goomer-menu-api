@@ -3,6 +3,11 @@ import sequelize, { testConnection } from './lib/database.js';
 import fastifySwagger from '@fastify/swagger';
 import fastifySwaggerUI from '@fastify/swagger-ui';
 
+import { buildProductRoutes } from './routes/product.routes.js';
+import { ProductController } from './controllers/product.controller.js';
+import { ProductService } from './services/product.service.js';
+import { ProductRepository } from './repositories/product.repository.js';
+
 const server = Fastify({
   logger: true,
 });
@@ -35,8 +40,25 @@ server.register(fastifySwaggerUI, {
   },
 });
 
+
+const productRepository = new ProductRepository();
+
+
+const productService = new ProductService(productRepository);
+
+
+const productController = new ProductController(productService);
+
+
+const productRoutes = buildProductRoutes(productController);
+
+
 server.get('/', async (request, reply) => {
   return reply.status(200).send({ status: 'ok' });
+});
+
+server.register(productRoutes, {
+  prefix: '/api/products',
 });
 
 const start = async () => {
